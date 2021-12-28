@@ -1,8 +1,8 @@
 import kaboom from "kaboom";
 
-window.addEventListener("touchstart", async (e) => {
+window.addEventListener("touchend", async (e) => {
     const h1 = document.createElement("h1");
-    h1.textContent = "touchstart";
+    h1.textContent = "touchend";
     document.body.appendChild(h1);
 
     const value = await DeviceOrientationEvent.requestPermission();
@@ -25,11 +25,11 @@ scene("title", () => {
         add([rect(10, 10), pos(10, 0), area(), body(), color(RED)]);
     });
 
-    const touchListener = window.addEventListener("touchstart", async () => {
+    const touchListener = window.addEventListener("touchend", async () => {
         if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
             add([rect(10, 10), pos(10, 0), area(), body(), color(GREEN)]);
             await DeviceMotionEvent.requestPermission();
-            window.removeEventListener(clickListener);
+            window.removeEventListener(touchListener);
             go("main");
         }
     });
@@ -185,7 +185,7 @@ scene("main", () => {
 scene("gameOver", () => {
     add([text("Game Over!\n\nTap to try again", { size: 36 })]);
     const playAgain = () => go("main");
-    onTouchStart(playAgain);
+    onTouchEnd(playAgain);
     onKeyPress("enter", () => playAgain());
     onClick(playAgain);
 });
@@ -193,7 +193,7 @@ scene("gameOver", () => {
 scene("victory", () => {
     add([text("You win!\n\nTap to try again", { size: 36 })]);
     const playAgain = () => go("main");
-    onTouchStart(playAgain);
+    onTouchEnd(playAgain);
     onKeyPress("enter", () => playAgain());
     onClick(playAgain);
 });

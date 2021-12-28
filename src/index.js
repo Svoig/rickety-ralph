@@ -13,12 +13,12 @@ scene("title", () => {
 
     window.addEventListener("deviceorientation", (e) => {
 
-                add([rect(10, 10), pos(10, 0), body(), area(), color(RED)]);
+                add([rect(10, 10), pos(10, 0), area(), body(), color(RED)]);
     });
 
     const touchListener = window.addEventListener("touchstart", async () => {
             if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
-                add([rect(10, 10), pos(10, 0), body(), area(), color(GREEN)]);
+                add([rect(10, 10), pos(10, 0), area(), body(), color(GREEN)]);
                 await DeviceMotionEvent.requestPermission();
                 window.removeEventListener(clickListener);
                 go("main");

@@ -21,6 +21,10 @@ scene("title", () => {
     let hasGrantedPermission = false;
 
     window.addEventListener("deviceorientation", (e) => {
+        console.log(e);
+        // if (Math.abs(player.vel) < player.maxVel) {
+        //     player.vel += e.beta;
+        // }
 
         add([rect(10, 10), pos(10, 0), area(), body(), color(RED)]);
     });
@@ -149,10 +153,12 @@ scene("main", () => {
     player.onCollide("goal", () => go("victory"));
 
     window.addEventListener("deviceorientation", (e) => {
-        add([rect(TILE_WIDTH, TILE_WIDTH), pos(100, 0), color(WHITE), area(), body()]);
-        if (player.vel < player.maxVel) {
-            player.vel += player.acc;
+        console.log(e);
+        if (Math.abs(player.vel) < player.maxVel) {
+            player.vel += e.beta;
         }
+
+        add([rect(10, 10), pos(10, 0), area(), body(), color(RED)]);
     });
 
     keyDown("right", () => {

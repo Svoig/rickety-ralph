@@ -118,11 +118,11 @@ scene("main", () => {
         ]);
     });
 
-    const velText = add([text("0", { size: 10 }, pos(player.pos.x, player.pos.y - 10))]);
-    velText.onUpdate(() => {
-        velText.pos = [player.pos.x, player.pos.y - 10]
-        velText.text = player.vel;
-    });
+    // const velText = add([text("0", { size: 10 }, pos(player.pos.x, player.pos.y - 10))]);
+    // velText.onUpdate(() => {
+    //     velText.pos = [player.pos.x, player.pos.y - 10]
+    //     velText.text = player.vel;
+    // });
 
     player.onCollide("ground", (ground) => {
         const collisionAngle = player.pos.angle(ground.pos);

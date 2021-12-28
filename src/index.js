@@ -22,33 +22,32 @@ scene("title", () => {
 
     window.addEventListener("deviceorientation", (e) => {
 
-                add([rect(10, 10), pos(10, 0), area(), body(), color(RED)]);
+        add([rect(10, 10), pos(10, 0), area(), body(), color(RED)]);
     });
 
     const touchListener = window.addEventListener("touchstart", async () => {
-            if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
-                add([rect(10, 10), pos(10, 0), area(), body(), color(GREEN)]);
-                await DeviceMotionEvent.requestPermission();
-                window.removeEventListener(clickListener);
-                go("main");
-            }
+        if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
+            add([rect(10, 10), pos(10, 0), area(), body(), color(GREEN)]);
+            await DeviceMotionEvent.requestPermission();
+            window.removeEventListener(clickListener);
+            go("main");
+        }
     });
 
-    const handleClick = () => {
-        // go("main");
+    const handleClick = async () => {
         if (hasGrantedPermission) {
             go("main");
         } else {
-            // if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
-            //     add([rect(10, 10), pos(10, 0), body(), area(), color(GREEN)]);
-            //     DeviceMotionEvent.requestPermission();
-            // } else if (DeviceMotionEvent) {
-            //     hasGrantedPermission = true;
-            //     window.addEventListener("deviceorientation", (e) => {
-            //         console.log("TILT!! ", e);
-            //     })
-            //     add([rect(10, 10), pos(10, 0), body(), area(), color(BLUE)]);
-            // }
+            if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
+                add([rect(10, 10), pos(10, 0), body(), area(), color(GREEN)]);
+                const response = await DeviceMotionEvent.requestPermission();
+                if (response === "granted") {
+                    hasGrantedPermission = true;
+                    permissionsButton.text = "Tap to play!";
+                }
+            } else {
+                go("main");
+            }
         }
     };
 
@@ -65,34 +64,91 @@ scene("title", () => {
 
 
     onClick(handleClick)
-
     onTouchStart(handleClick);
+    onKeyPress("enter", () => handleClick());
 });
 
 
 scene("main", () => {
-    const player = add([
-        rect(TILE_WIDTH, TILE_WIDTH),
-        color(255, 0, 0),
-        pos(100, 100),
-        area(),
-        body(),
-        {
-            vel: 0,
-            acc: 10,
-            maxVel: 500,
+    let player;
+
+    const map = addLevel([
+        "=                                                                   =",
+        "=                                                                   =",
+        "=                                                                   =",
+        "=                                R                                  =",
+        "=                             ==============                        =",
+        "=                                                                   =",
+        "=                                                                   =",
+        "=                                                              ======",
+        "=                                                                   =",
+        "=                                                                   =",
+        "=                                                                   =",
+        "=                                                                   =",
+        "=                                                                   =",
+        "=                                                                   =",
+        "=                                                                   =",
+        "=                                                                   =",
+        "=                                                                   =",
+        "=                                                                   =",
+        "=                                                                   =",
+        "=                                                                   =",
+        "=                                                                   =",
+        "=                                                                   =",
+        "=                                                                   =",
+        "=                                                               *   =",
+        "=====================================================================",
+    ], {
+        width: TILE_WIDTH,
+        height: TILE_WIDTH,
+        "=": () => [rect(TILE_WIDTH, TILE_WIDTH), color(GREEN), area(), solid(), "ground"],
+        "R": () => ["ralphStart"],
+        "*": () => [rect(TILE_WIDTH, TILE_WIDTH), color(YELLOW), area(), "goal"],
+    });
+
+    every("ralphStart", (ralphStart) => {
+        player = add([
+            rect(TILE_WIDTH, TILE_WIDTH),
+            color(255, 0, 0),
+            pos(ralphStart.pos),
+            area(),
+            body(),
+            {
+                vel: 0,
+                acc: 10,
+                maxVel: 500,
+                maxSafeVel: 250,
+                isAirborne: false
+            }
+        ]);
+    });
+
+    const velText = add([text("0", { size: 10 }, pos(player.pos.x, player.pos.y - 10))]);
+    velText.onUpdate(() => {
+        velText.pos = [player.pos.x, player.pos.y - 10]
+        velText.text = player.vel;
+    });
+
+    player.onCollide("ground", (ground) => {
+        const collisionAngle = player.pos.angle(ground.pos);
+        const hasHitWall = collisionAngle === 0 || collisionAngle === 180;
+
+        // The player can die when they hit the ground from being airborne, or when they crash into the ground
+        if ((player.isAirborne || hasHitWall) && Math.abs(player.vel) > player.maxSafeVel) {
+            go("gameOver");
         }
-    ]);
 
-    const ground = add([
-        rect(width(), 200),
-        pos(0, height() - 200),
-        color(0, 150, 0),
-        area(),
-        solid(),
-    ]);
+        if (hasHitWall) {
+            player.vel = 0;
+        }
 
-    window.addEventListener("touchstart", (e) => {
+        player.isAirborne = false;
+
+    });
+
+    player.onCollide("goal", () => go("victory"));
+
+    window.addEventListener("deviceorientation", (e) => {
         add([rect(TILE_WIDTH, TILE_WIDTH), pos(100, 0), color(WHITE), area(), body()]);
         if (player.vel < player.maxVel) {
             player.vel += player.acc;
@@ -113,7 +169,33 @@ scene("main", () => {
 
     player.onUpdate(() => {
         player.move(player.vel, 0);
+        if (!player.isGrounded()) {
+            player.isAirborne = true;
+        } else if (Math.abs(player.vel) > 0.025) {
+            // Lose some velocity while grounded (if moving faster than 0.025 to avoid rounding errors)
+            if (Math.round(player.vel) < 0) {
+                player.vel++;
+            } else {
+                player.vel--;
+            }
+        }
     });
+});
+
+scene("gameOver", () => {
+    add([text("Game Over!\n\nTap to try again", { size: 36 })]);
+    const playAgain = () => go("main");
+    onTouchStart(playAgain);
+    onKeyPress("enter", () => playAgain());
+    onClick(playAgain);
+});
+
+scene("victory", () => {
+    add([text("You win!\n\nTap to try again", { size: 36 })]);
+    const playAgain = () => go("main");
+    onTouchStart(playAgain);
+    onKeyPress("enter", () => playAgain());
+    onClick(playAgain);
 });
 
 go("title");

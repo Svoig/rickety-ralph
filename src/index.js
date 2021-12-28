@@ -1,5 +1,14 @@
 import kaboom from "kaboom";
 
+window.addEventListener("touchstart", async (e) => {
+    const h1 = document.createElement("h1");
+    h1.textContent = "touchstart";
+    document.body.appendChild(h1);
+
+    const value = await DeviceOrientationEvent.requestPermission();
+    h1.textContent = value;
+});
+
 const TILE_WIDTH = 5;
 
 kaboom({

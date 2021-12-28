@@ -15,7 +15,7 @@ module.exports = {
     //   ],
     // }),
     new HTMLWebpackPlugin({
-      title: "Rickety Ralp"
+      title: "Rickety Ralph"
     }),
   ]
 };

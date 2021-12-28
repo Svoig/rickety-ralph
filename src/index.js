@@ -146,7 +146,8 @@ scene("main", () => {
     window.addEventListener("deviceorientation", (e) => {
         console.log(e);
         if (Math.abs(player.vel) < player.maxVel) {
-            player.vel += e.beta;
+            // The raw input makes the movement very sensitive
+            player.vel += (e.beta / 10);
         }
     });
 

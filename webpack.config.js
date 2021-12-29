@@ -9,11 +9,11 @@ module.exports = {
     static: path.resolve(__dirname, `assets`)
   },
   plugins: [
-    // new CopyWebpackPlugin({
-    //   patterns: [
-    //     { from: path.resolve(__dirname, `assets`), to: path.resolve(__dirname, `dist`) },
-    //   ],
-    // }),
+    new CopyWebpackPlugin({
+      patterns: [
+        { from: path.resolve(__dirname, `assets`), to: path.resolve(__dirname, `dist`) },
+      ],
+    }),
     new HTMLWebpackPlugin({
       title: "Rickety Ralph"
     }),

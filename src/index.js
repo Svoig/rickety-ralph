@@ -59,7 +59,7 @@ scene("main", () => {
     let player;
 
     const map = addLevel([
-        "=                                                                   =",
+        "=====================================================================",
         "=                                                                   =",
         "=                                                                   =",
         "= R                                                                 =",
@@ -242,8 +242,9 @@ scene("main", () => {
         }
     };
 
-    touchStart(() => activatePlatforms());
-    touchEnd(() => deactivatePlatforms());
+
+    onMouseDown(() => activatePlatforms());
+    onMouseRelease(() => deactivatePlatforms());
 
     keyPress("space", () => activatePlatforms());
     keyRelease("space", () => deactivatePlatforms());
@@ -269,6 +270,8 @@ scene("main", () => {
     });
 
     player.onUpdate(() => {
+        // TODO: Make camera try to keep player at upper left
+        camPos(player.pos);
         player.move(player.vel, 0);
 
         if (!player.isGrounded()) {

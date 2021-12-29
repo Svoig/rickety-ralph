@@ -9,16 +9,16 @@ kaboom({
 
 loadSprite("ralph", "ralph.png");
 
+
 scene("title", () => {
     let hasGrantedPermission = false;
 
-    const touchListener = window.addEventListener("touchend", async () => {
+    touchEnd(async () => {
         if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
             await DeviceMotionEvent.requestPermission();
-            window.removeEventListener("touchend", touchListener);
             go("main");
         }
-    });
+    })
 
     const handleClick = async () => {
         if (hasGrantedPermission) {
@@ -136,8 +136,8 @@ scene("main", () => {
         "=": () => [rect(TILE_WIDTH, TILE_WIDTH), color(GREEN), area(), solid(), "ground"],
         "R": () => ["ralphStart"],
         "*": () => [rect(TILE_WIDTH, TILE_WIDTH), color(YELLOW), area(), "goal"],
-        "m": () => [rect(TILE_WIDTH, TILE_WIDTH), color(BLUE), area(), solid(), "movingPlatform", "ground", { moveFactor: 1}],
-        "M": () => [rect(TILE_WIDTH, TILE_WIDTH), color(BLUE), area(), solid(), "movingPlatform", "ground", { moveFactor: 2}],
+        "m": () => [rect(TILE_WIDTH, TILE_WIDTH), color(BLUE), area(), solid(), "movingPlatform", "ground", { moveFactor: 1 }],
+        "M": () => [rect(TILE_WIDTH, TILE_WIDTH), color(BLUE), area(), solid(), "movingPlatform", "ground", { moveFactor: 2 }],
     });
 
     every("ralphStart", (ralphStart) => {
@@ -281,7 +281,7 @@ scene("main", () => {
             // Reset airborne count when hitting the ground
             player.airborneCount = 0;
             if (Math.abs(player.vel) > 0.025) {
-            // Lose some velocity while grounded (if moving faster than 0.025 to avoid rounding errors)
+                // Lose some velocity while grounded (if moving faster than 0.025 to avoid rounding errors)
             } else if (Math.round(player.vel) < 0) {
                 player.vel++;
             } else {

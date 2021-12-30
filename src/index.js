@@ -3,7 +3,7 @@ import kaboom from "kaboom";
 const TILE_WIDTH = 20;
 
 kaboom({
-    background: [50, 100, 200],
+    background: [25, 25, 25],
     scale: 1,
 });
 

@@ -45,7 +45,7 @@ scene("title", () => {
         rect(100, 200),
         color([0, 200, 50]),
         pos(0, 150),
-        text("Tap to grant accelerometer permissions", { size: 28 }),
+        text("Tap to play", { size: 28 }),
     ]);
 
 

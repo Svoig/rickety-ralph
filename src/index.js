@@ -50,9 +50,19 @@ function explode(player) {
 
 }
 
+let hasStartedGame = false;
 
 scene("title", () => {
     let hasGrantedPermission = false;
+
+    // Has to be touchend to prompt for permissions
+    window.addEventListener("touchend", () => {
+        if (!hasStartedGame) {
+            hasStartedGame = true;
+            handleClick();
+        }
+    });
+    
 
     const handleClick = async () => {
         if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {

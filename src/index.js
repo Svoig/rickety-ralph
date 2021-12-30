@@ -7,14 +7,19 @@ kaboom({
     scale: 1,
 });
 
-load(new Promise((resolve) => {
-    if (ScreenOrientation && typeof ScreenOrientation.lock === "function") {
-        ScreenOrientation.lock("landscape");
-    }
-    resolve("ok");
-}));
+// Can't do ScreenOrientation on iOS Safari
+// load(new Promise((resolve) => {
+//     if (ScreenOrientation && typeof ScreenOrientation.lock === "function") {
+//         ScreenOrientation.lock("landscape");
+//     }
+//     resolve("ok");
+// }));
 
 loadSprite("ralph", "ralph.png");
+loadSprite("scaffold", "scaffold.png");
+loadSprite("movingPlatform", "movingPlatform.png");
+loadSprite("coin", "coin.png");
+loadSprite("flag", "flag.png");
 loadSprite("explosion", "explosion.png", {
     sliceX: 3,
     sliceY: 3,
@@ -25,9 +30,12 @@ loadSprite("explosion", "explosion.png", {
             speed: 12
         }
     }
-})
+});
+loadSound("boom", "boom.m4a");
+loadSound("aroo", "aroo.m4a");
 
 function explode(player) {
+    play("boom", { speed: 2 });
     const playerPos = player.pos;
 
     destroy(player);
@@ -107,15 +115,15 @@ scene("main", () => {
         "=                                                                   =",
         "=                                                                   =",
         "= R                                                                 =",
-        "==========================                                          =",
+        "===========================                                         =",
         "=                                                                   =",
         "=                                                                   =",
         "=                                                                   =",
         "=                                                                   =",
         "=                                                                   =",
-        "=                                  ==================================",
+        "=                                 ===============================mmm=",
         "=                                                                   =",
-        "=                                                                   =",
+        "=                                                              C    =",
         "=                                   ==== == == == == == == == ===   =",
         "=                                                                   =",
         "=                                                                   =",
@@ -126,7 +134,7 @@ scene("main", () => {
         "=                                   =   =========================MMM=",
         "=           ==============          =                               =",
         "=                        =          =                               =",
-        "=========MMM   ===       =          =MMM=========================   =",
+        "=============  ===       =          =MMM=========================   =",
         "=               =        =                                          =",
         "=               =        =                                          =",
         "=               =        =                                          =",
@@ -135,21 +143,24 @@ scene("main", () => {
         "=                        =      ===========================mmm      =",
         "=                        =                                          =",
         "=================        =                                          =",
-        "=                =       =                                          =",
+        "=                ==      =                                          =",
         "=                        =                                          =",
-        "=                  =     =                                          =",
+        "=     C            ==    =                                          =",
+        "=   =====                =                                          =",
+        "=                    ==  =                                          =",
         "=                        =                                          =",
-        "=                    =   =                                          =",
         "=                        =                                          =",
-        "=                        =                                          =",
-        "=                    =====                                          =",
-        "=                   =                                               =",
-        "=                                                                   =",
-        "=                 =                                                 =",
-        "=                                                                   =",
-        "=               =                                                   =",
+        "=MMM=====   =        =====                                          =",
+        "=           =      ==                                               =",
+        "=           =                                                       =",
+        "=           =    ==                                                 =",
+        "=   =====MMM=                                                       =",
+        "=              ==                                                   =",
         "=                                                                   =",
         "=MMM===========                                                     =",
+        "=                     C                                             =",
+        "=                                                                   =",
+        "=                     ===============================================",
         "=                                                                   =",
         "=                                                                   =",
         "=                                                                   =",
@@ -158,10 +169,7 @@ scene("main", () => {
         "=                                                                   =",
         "=                                                                   =",
         "=                                                                   =",
-        "=                                                                   =",
-        "=                                                                   =",
-        "=                                                                   =",
-        "=                                                                   =",
+        "==============                                                      =",
         "=                                                                   =",
         "=                                                                   =",
         "=                                                                   =",
@@ -177,17 +185,17 @@ scene("main", () => {
     ], {
         width: TILE_WIDTH,
         height: TILE_WIDTH,
-        "=": () => [rect(TILE_WIDTH, TILE_WIDTH), color(GREEN), area(), solid(), "ground"],
+        "=": () => [sprite("scaffold", { height: TILE_WIDTH, width: TILE_WIDTH }), area(), solid(), "ground"],
         "R": () => ["ralphStart"],
-        "*": () => [rect(TILE_WIDTH, TILE_WIDTH), color(YELLOW), area(), "goal"],
-        "m": () => [rect(TILE_WIDTH, TILE_WIDTH), color(BLUE), area(), solid(), "movingPlatform", "ground", { moveFactor: 1 }],
-        "M": () => [rect(TILE_WIDTH, TILE_WIDTH), color(BLUE), area(), solid(), "movingPlatform", "ground", { moveFactor: 2 }],
+        "*": () => [sprite("flag", { height: TILE_WIDTH, width: TILE_WIDTH}), area(), "goal"],
+        "m": () => [sprite("movingPlatform", { height: TILE_WIDTH, width: TILE_WIDTH }), area(), solid(), "movingPlatform", "ground", { moveFactor: 1 }],
+        "M": () => [sprite("movingPlatform", { height: TILE_WIDTH, width: TILE_WIDTH }), area(), solid(), "movingPlatform", "ground", { moveFactor: 2 }],
+        "C": () => [sprite("coin", { height: TILE_WIDTH, width: TILE_WIDTH}), area(), "coin"],
     });
 
     every("ralphStart", (ralphStart) => {
         player = add([
-            // rect(TILE_WIDTH, TILE_WIDTH),
-            sprite("ralph"),
+            sprite("ralph", { height: TILE_WIDTH, width: TILE_WIDTH }),
             pos(ralphStart.pos),
             area(),
             body(),
@@ -222,6 +230,15 @@ scene("main", () => {
 
         });
     });
+
+    // Coins
+    let coinsCollected = 0;
+    const coinsText = add([
+        text("Coins collected: 0", { size: 24}),
+        pos(10, 10),
+        fixed(),
+    ]);
+
 
     // DEBUG
     // const velText = add([text("Vel: 0", { size: 24 }, pos(player.pos.x, player.pos.y - 24))]);
@@ -259,7 +276,14 @@ scene("main", () => {
 
     });
 
-    player.onCollide("goal", () => go("victory"));
+    player.onCollide("coin", (coin) => {
+        coinsCollected++;
+        coinsText.text = `Coins collected: ${coinsCollected}`;
+        destroy(coin);
+        play("boom", { speed: 8, detune: 8000});
+    });
+
+    player.onCollide("goal", () => go("victory", { coinsCollected }));
 
     window.addEventListener("deviceorientation", (e) => {
         // TODO: Consolidate this and the keyboard movement into one function
@@ -313,10 +337,15 @@ scene("main", () => {
         }
     });
 
+    keyDown("y", () => {
+        console.log("Screen pos: ", player.screenPos(), "Width: ", width());
+    });
+
     player.onUpdate(() => {
-        // TODO: Make camera try to keep player at upper left
-        camPos(player.pos);
         player.move(player.vel, 0);
+        camPos(player.pos.x, player.pos.y + 100);
+        // TODO: Make camera try to keep player at upper left
+        // const lerpedCamPos = lerp(camPos(), camPos(), 1.0);
 
         if (!player.isGrounded()) {
             player.isAirborne = true;
@@ -348,8 +377,10 @@ scene("gameOver", () => {
     onClick(playAgain);
 });
 
-scene("victory", () => {
-    add([text("You win!\n\nTap to try again", { size: 36 })]);
+scene("victory", ({ coinsCollected }) => {
+    play("aroo", { speed: 4, detune: 2000});
+    // TODO: Score based on coins and time to complete
+    add([text(`You win! You collected ${coinsCollected} coins!\n\nTap to try again`, { size: 36 })]);
     const playAgain = () => go("main");
     onTouchEnd(playAgain);
     onKeyPress("enter", () => playAgain());

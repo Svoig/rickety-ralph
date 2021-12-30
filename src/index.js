@@ -15,11 +15,11 @@ load(new Promise((resolve) => {
 }));
 
 loadSprite("ralph", "ralph.png");
-loadSprite("pop", "pop.png", {
+loadSprite("explosion", "explosion.png", {
     sliceX: 3,
     sliceY: 3,
     anims: {
-        go: {
+        pop: {
             from: 0,
             to: 8,
             speed: 12
@@ -29,13 +29,11 @@ loadSprite("pop", "pop.png", {
 
 function explode(player) {
     const playerPos = player.pos;
-    const playerWidth = player.width;
-    const playerHeight = player.height;
 
     destroy(player);
 
-    const explosion = add([sprite("pop"), pos(playerPos), color(WHITE)]);
-    explosion.play("go");
+    const explosion = add([sprite("explosion"), pos(playerPos), color(WHITE)]);
+    explosion.play("pop");
 
     wait(1, () => {
         destroy(explosion)

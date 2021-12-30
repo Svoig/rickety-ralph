@@ -4,54 +4,100 @@ const TILE_WIDTH = 20;
 
 kaboom({
     background: [50, 100, 200],
-    scale: 0.5,
+    scale: 1,
 });
 
+load(new Promise((resolve) => {
+    if (ScreenOrientation && typeof ScreenOrientation.lock === "function") {
+        ScreenOrientation.lock("landscape");
+    }
+    resolve("ok");
+}));
+
 loadSprite("ralph", "ralph.png");
+loadSprite("pop", "pop.png", {
+    sliceX: 3,
+    sliceY: 3,
+    anims: {
+        go: {
+            from: 0,
+            to: 8,
+            speed: 12
+        }
+    }
+})
+
+function explode(player) {
+    const playerPos = player.pos;
+    const playerWidth = player.width;
+    const playerHeight = player.height;
+
+    destroy(player);
+
+    const explosion = add([sprite("pop"), pos(playerPos), color(WHITE)]);
+    explosion.play("go");
+
+    wait(1, () => {
+        destroy(explosion)
+        go("gameOver");
+    })
+
+}
 
 
 scene("title", () => {
     let hasGrantedPermission = false;
 
-    touchEnd(async () => {
-        if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
-            await DeviceMotionEvent.requestPermission();
-            go("main");
-        }
-    })
-
     const handleClick = async () => {
+        if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
+            const value = await DeviceMotionEvent.requestPermission();
+            if (value === "granted") {
+                hasGrantedPermission = true;
+            } else {
+                titleText.text = "Accelerometer is required to play. Please enable access.\n\n";
+            }
+        } else {
+            hasGrantedPermission = true;
+        }
+
         if (hasGrantedPermission) {
             go("main");
-        } else {
-            if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
-                add([rect(10, 10), pos(10, 0), body(), area(), color(GREEN)]);
-                const response = await DeviceMotionEvent.requestPermission();
-                if (response === "granted") {
-                    hasGrantedPermission = true;
-                    permissionsButton.text = "Tap to play!";
-                }
-            } else {
-                go("main");
-            }
         }
     };
 
-    add([
+    onClick(handleClick);
+
+    // const handleClick = async () => {
+    //     if (hasGrantedPermission) {
+    //         go("main");
+    //     } else {
+    //         if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
+    //             add([rect(10, 10), pos(10, 0), body(), area(), color(GREEN)]);
+    //             const response = await DeviceMotionEvent.requestPermission();
+    //             if (response === "granted") {
+    //                 hasGrantedPermission = true;
+    //                 permissionsButton.text = "Tap to play!";
+    //             }
+    //         } else {
+    //             go("main");
+    //         }
+    //     }
+    // };
+
+    const titleText = add([
         text("RICKETY RALPH'S RICKETY RIDE\n\nTap to start!", { size: 48 })
     ]);
 
-    const permissionsButton = add([
+    add([
         rect(100, 200),
         color([0, 200, 50]),
         pos(0, 150),
         text("Tap to play", { size: 28 }),
     ]);
 
-
-    onClick(handleClick)
-    onTouchStart(handleClick);
-    onKeyPress("enter", () => handleClick());
+    onKeyDown(["enter", "space"], () => {
+        handleClick();
+    });
 });
 
 
@@ -69,43 +115,43 @@ scene("main", () => {
         "=                                                                   =",
         "=                                                                   =",
         "=                                                                   =",
+        "=                                  ==================================",
         "=                                                                   =",
         "=                                                                   =",
-        "=        == == ==                  ==================================",
-        "=                                                                   =",
-        "=                                                                   =",
-        "=                                                                   =",
-        "=                                                                   =",
+        "=                                   ==== == == == == == == == ===   =",
         "=                                                                   =",
         "=                                                                   =",
         "=                                                                   =",
+        "=                                   =============================MMM=",
+        "=                                   =                               =",
+        "=                                   =                               =",
+        "=                                   =   =========================MMM=",
+        "=           ==============          =                               =",
+        "=                        =          =                               =",
+        "=========MMM   ===       =          =MMM=========================   =",
+        "=               =        =                                          =",
+        "=               =        =                                          =",
+        "=               =        =                                          =",
+        "=MMM=============        =                                    ===MMM=",
+        "=                        =                                          =",
+        "=                        =      ===========================mmm      =",
+        "=                        =                                          =",
+        "=================        =                                          =",
+        "=                =       =                                          =",
+        "=                        =                                          =",
+        "=                  =     =                                          =",
+        "=                        =                                          =",
+        "=                    =   =                                          =",
+        "=                        =                                          =",
+        "=                        =                                          =",
+        "=                    =====                                          =",
+        "=                   =                                               =",
         "=                                                                   =",
-        "=           ==============         ==                               =",
+        "=                 =                                                 =",
         "=                                                                   =",
-        "=========MMM   ===                   MMM=========================   =",
         "=               =                                                   =",
-        "=               =                                                   =",
-        "=               =                                                   =",
-        "=MMM=============                                             ===MMM=",
         "=                                                                   =",
-        "=                               ===========================mmm      =",
-        "=                                                                   =",
-        "=================                                                   =",
-        "=                                                                   =",
-        "=                                                                   =",
-        "=                                                                   =",
-        "=                                                                   =",
-        "=                                                                   =",
-        "=                                                                   =",
-        "=                                                                   =",
-        "=                                                                   =",
-        "=                                                                   =",
-        "=                                                                   =",
-        "=                                                                   =",
-        "=                                                                   =",
-        "=                                                                   =",
-        "=                                                                   =",
-        "=                                                                   =",
+        "=MMM===========                                                     =",
         "=                                                                   =",
         "=                                                                   =",
         "=                                                                   =",
@@ -202,7 +248,7 @@ scene("main", () => {
             (hasHitWall && Math.abs(player.vel) > player.maxSafeVel)
             || (player.isAirborne && Math.abs(player.angle) > 45)
             || (player.isAirborne && player.airborneCount >= player.maxSafeAirborneCount)) {
-            go("gameOver");
+            explode(player);
         }
 
         player.angle = 0;
@@ -280,6 +326,8 @@ scene("main", () => {
             // When too many add up, we'll kill them when they hit the ground
             // (stand in for detecting velocity y, since body() doesn't do that)
             player.airborneCount += 1 * dt();
+            // Rotate while airborne due to velocity in addition to the rotation from movement
+            player.angle += player.vel / 100;
         } else {
             // Reset airborne count when hitting the ground
             player.airborneCount = 0;

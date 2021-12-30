@@ -7,6 +7,8 @@ kaboom({
     scale: 1,
 });
 
+fullscreen();
+
 // Can't do ScreenOrientation on iOS Safari
 // load(new Promise((resolve) => {
 //     if (ScreenOrientation && typeof ScreenOrientation.lock === "function") {

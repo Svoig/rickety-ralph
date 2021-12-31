@@ -63,6 +63,7 @@ const startGame = () => {
         window.addEventListener("touchend", () => {
             if (!hasStartedGame) {
                 hasStartedGame = true;
+                play("aroo", { speed: 4, detune: 2000 });
                 handleClick();
             }
         });
@@ -117,6 +118,7 @@ const startGame = () => {
 
     scene("main", () => {
         let player;
+        const startTime = Date.now();
 
         const map = addLevel([
             "=====================================================================",
@@ -151,9 +153,9 @@ const startGame = () => {
             "=                                                                   =",
             "=                                                                   =",
             "=   =============                                                   =",
-            "=                ==      C                                          =",
-            "=                       ==                                          =",
-            "=     C            ==    =                                          =",
+            "=                ==                                                 =",
+            "=                        C                                          =",
+            "=     C            ==   ==                                          =",
             "=M  =====                =                                          =",
             "=                    ==  =                                          =",
             "=                        =                                          =",
@@ -166,9 +168,9 @@ const startGame = () => {
             "=              ==                                                   =",
             "=                                                                   =",
             "=M  ===========                                                     =",
-            "=                     C                                             =",
             "=                                                                   =",
-            "=                     =========================================     =",
+            "=                                                                   =",
+            "=                     ============================                  =",
             "=                                                                   =",
             "=                                                                   =",
             "=                                           ======                  =",
@@ -177,17 +179,17 @@ const startGame = () => {
             "=                                                                   =",
             "=                                                                   =",
             "=                                                                   =",
-            "==============                                                      =",
+            "==============M                                                     =",
             "=                                                                   =",
             "=                                                                   =",
             "=                                                                   =",
             "=                                                                   =",
-            "=                      ============                                 =",
+            "=                            =============                          =",
             "=                                                                   =",
             "=                                                                   =",
+            "=                                            ====                   =",
             "=                                                                   =",
-            "=                                                                   =",
-            "=                                                                   =",
+            "=                                                    =====          =",
             "=                                                               *   =",
             "=====================================================================",
         ], {
@@ -229,12 +231,12 @@ const startGame = () => {
             let targetPosY = movingPlatform.originalY;
 
             movingPlatform.onUpdate(() => {
-                if (player.pos.dist(movingPlatform.pos) < 200 && player.isActivatingPlatforms) {
+                if (player.pos.dist(movingPlatform.pos) < 300 && player.isActivatingPlatforms) {
                     targetPosY = movingPlatform.originalY - (movingPlatform.moveFactor * (TILE_WIDTH * 2));
                 } else {
                     targetPosY = movingPlatform.originalY;
                 }
-                const lerped = lerp(movingPlatform.pos.y, targetPosY, 0.125);
+                const lerped = lerp(movingPlatform.pos.y, targetPosY, 0.25);
                 const isCloseEnough = Math.abs(lerped - targetPosY) < 1.5;
 
                 movingPlatform.pos.y = isCloseEnough ? targetPosY : lerped;
@@ -300,7 +302,7 @@ const startGame = () => {
             play("boom", { speed: 8, detune: 8000 });
         });
 
-        player.onCollide("goal", () => go("victory", { coinsCollected }));
+        player.onCollide("goal", () => go("victory", { coinsCollected, startTime, endTime: Date.now() }));
 
         window.addEventListener("deviceorientation", (e) => {
             // TODO: Auto-detect which side of the device is to the left and use that to determine which rotation value to use
@@ -395,10 +397,10 @@ const startGame = () => {
         onClick(playAgain);
     });
 
-    scene("victory", ({ coinsCollected }) => {
+    scene("victory", ({ coinsCollected, startTime, endTime }) => {
         play("aroo", { speed: 4, detune: 2000 });
         // TODO: Score based on coins and time to complete
-        add([text(`You win! You collected ${coinsCollected} coins!\n\nTap to try again`, { size: 36 })]);
+        add([text(`You win! You collected ${coinsCollected} coins!\n\nYou completed the level in ${(endTime - starTime) / 1000} seconds!\n\nTap to try again`, { size: 36 })]);
         const playAgain = () => go("main");
         onTouchEnd(playAgain);
         onKeyPress("enter", () => playAgain());

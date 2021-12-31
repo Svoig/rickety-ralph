@@ -1,0 +1,11 @@
+{
+    "name": "Rickety Ralph",
+    "display": "standalone",
+    "start_url": "/?standalone=true",
+    "icons": [
+      {
+        "sizes": "32x32",
+        "src": "ralph.png"
+      }
+    ]
+  }

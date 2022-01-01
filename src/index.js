@@ -44,6 +44,17 @@ const startGame = () => {
     loadSprite("movingPlatform", "movingPlatform.png");
     loadSprite("coin", "coin.png");
     loadSprite("flag", "flag.png");
+    loadSprite("scaffoldWhite", "scaffoldWhite.png", {
+        sliceX: 2,
+        sliceY: 3,
+        anims: {
+            crumble: {
+                from: 0,
+                to: 4,
+                speed: 12
+            }
+        }
+    });
     loadSprite("explosion", "explosion.png", {
         sliceX: 3,
         sliceY: 3,
@@ -121,6 +132,7 @@ const startGame = () => {
         // });
 
         player.onCollide("crumbling", (crumbling) => {
+            crumbling.play("crumble");
             wait(0.25, () => {
                 destroy(crumbling);
             });
@@ -310,7 +322,7 @@ const startGame = () => {
         width: TILE_WIDTH,
         height: TILE_WIDTH,
         "=": () => [sprite("scaffold", { height: TILE_WIDTH, width: TILE_WIDTH }), area(), solid(), "ground"],
-        ":": () => [sprite("scaffold", { height: TILE_WIDTH, width: TILE_WIDTH }), color(GREEN), area(), solid(), "ground", "crumbling"],
+        ":": () => [sprite("scaffoldWhite", { height: TILE_WIDTH, width: TILE_WIDTH }), area(), solid(), "ground", "crumbling"],
         "R": () => ["ralphStart"],
         "*": () => [sprite("flag", { height: TILE_WIDTH, width: TILE_WIDTH }), area(), "goal"],
         // Elevator width is * 3 to avoid having three platforms for each one
@@ -370,16 +382,16 @@ const startGame = () => {
 
         const map = addLevel([
             "==================================================",
-            "= R           = C       =                        =",
-            "=========      ======   =  =====                 =",
-            "=                       =                        =",
-            "=            ========m  =m  ====                 =",
-            "= C          :                                 * =",
-            "=================================m  ==============",
+            "= R           = C       =     C =    C =         =",
+            "=========      ======   =   =====   ====         =",
+            "=                       =       =      =         =",
+            "=            ========m  =m  =====m  ====         =",
+            "= C          :                         =         =",
+            "=========================m  =====m             * =",
             "==================================================",
         ], mapTileConfig);
 
-        sceneSetup({ currentLevel: "four", nextLevel: "five"});
+        sceneSetup({ currentLevel: "four", nextLevel: "five" });
     });
 
 
@@ -441,11 +453,11 @@ const startGame = () => {
             "=====================================================================",
         ], mapTileConfig);
 
-        sceneSetup({ currentLevel: "six", nextLevel: "seven"});
+        sceneSetup({ currentLevel: "six", nextLevel: "seven" });
     })
 
     scene("seven", () => {
-        add([text("Coming soon", { size: 24}, pos(24, 24))]);
+        add([text("And so Rickety Ralph defeated the evil wizard and saved the kingdom\n\nTHE END", { size: 24 }, pos(24, 24))]);
     });
 
     scene("gameOver", ({ lastLevel }) => {

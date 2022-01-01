@@ -1,6 +1,6 @@
 import kaboom from "kaboom";
 
-const TILE_WIDTH = 20;
+const TILE_WIDTH = 30;
 
 const startGame = () => {
 
@@ -10,6 +10,26 @@ const startGame = () => {
         background: [25, 25, 25],
         scale: 1,
     });
+
+    let player;
+
+    const createPlayer = (startPos) => add([
+        sprite("ralph", { height: TILE_WIDTH, width: TILE_WIDTH }),
+        pos(startPos),
+        area(),
+        body(),
+        rotate(0),
+        {
+            vel: 0,
+            acc: 10,
+            maxVel: 500,
+            maxSafeVel: 350,
+            isActivatingPlatforms: false, // Controls whether moving platforms should be activated
+            isAirborne: false,
+            airborneCount: 0, // Used to determine how long the player has been in the air to decide if landing is safe
+            maxSafeAirborneCount: 0.5, // In seconds
+        }
+    ]);
 
     // Can't do ScreenOrientation on iOS Safari
     // load(new Promise((resolve) => {
@@ -38,7 +58,7 @@ const startGame = () => {
     loadSound("boom", "boom.m4a");
     loadSound("aroo", "aroo.m4a");
 
-    function explode(player) {
+    function explode(player, currentLevel) {
         play("boom", { speed: 2 });
         const playerPos = player.pos;
 
@@ -49,181 +69,16 @@ const startGame = () => {
 
         wait(1, () => {
             destroy(explosion)
-            go("gameOver");
+            go("gameOver", { lastLevel: currentLevel });
         })
 
     }
 
-    let hasStartedGame = false;
-
-    scene("title", () => {
-        let hasGrantedPermission = false;
-
-        // Has to be touchend to prompt for permissions
-        window.addEventListener("touchend", () => {
-            if (!hasStartedGame) {
-                hasStartedGame = true;
-                play("aroo", { speed: 4, detune: 2000 });
-                handleClick();
-            }
-        });
-
-
-        const handleClick = async () => {
-            if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
-                const value = await DeviceMotionEvent.requestPermission();
-                if (value === "granted") {
-                    hasGrantedPermission = true;
-                } else {
-                    titleText.text = "Accelerometer is required to play. Please enable access.\n\n";
-                }
-            } else {
-                hasGrantedPermission = true;
-            }
-
-            if (hasGrantedPermission) {
-                go("main");
-                play("aroo", { speed: 4, detune: 2000 });
-            }
-        };
-
-        onClick(handleClick);
-
-        // const handleClick = async () => {
-        //     if (hasGrantedPermission) {
-        //         go("main");
-        //     } else {
-        //         if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
-        //             add([rect(10, 10), pos(10, 0), body(), area(), color(GREEN)]);
-        //             const response = await DeviceMotionEvent.requestPermission();
-        //             if (response === "granted") {
-        //                 hasGrantedPermission = true;
-        //                 permissionsButton.text = "Tap to play!";
-        //             }
-        //         } else {
-        //             go("main");
-        //         }
-        //     }
-        // };
-
-        const titleText = add([
-            text("RICKETY RALPH'S RICKETY RIDE\n\nTap to start!", { size: 48 })
-        ]);
-
-        onKeyDown(["enter", "space"], () => {
-            handleClick();
-        });
-    });
-
-
-    scene("main", () => {
-        let player;
+    function sceneSetup({ currentLevel, nextLevel }) {
         const startTime = Date.now();
 
-        const map = addLevel([
-            "=====================================================================",
-            "=                                                                   =",
-            "=                                                                   =",
-            "= R                                                                 =",
-            "===========================                                         =",
-            "=                                                                   =",
-            "=                                                                   =",
-            "=                                                                   =",
-            "=                                                                   =",
-            "=                                                                   =",
-            "=                                 ===============================m  =",
-            "=                                   =                               =",
-            "=                                   =                          C    =",
-            "=                                   =                == == == ===   =",
-            "=                                   =       C                       =",
-            "=                                   =============                   =",
-            "=                                   =                               =",
-            "=                                   =============================M  =",
-            "=                                   =                               =",
-            "=                                   =                               =",
-            "=                                   =   =============================",
-            "=           ==============          =                               =",
-            "=                        =          =                               =",
-            "=============  ===       ===============================            =",
-            "=               =        =                                          =",
-            "=               =        =                                          =",
-            "=               =        =                                          =",
-            "=M  =============                  :::::::::::::::::::::::::=========",
-            "=                                                                   =",
-            "=                                                                   =",
-            "=                                                                   =",
-            "=   =============                                                   =",
-            "=                ==                                                 =",
-            "=                        C                                          =",
-            "=     C            ==   ==                                          =",
-            "=M  =====                =                                          =",
-            "=                    ==  =                                          =",
-            "=                        =                                          =",
-            "=                        =                                          =",
-            "=M  =====   =        =====                                          =",
-            "=           =      ==                                               =",
-            "=           =                                                       =",
-            "=           =    ==                                                 =",
-            "=   =====M  =                                                       =",
-            "=              ==                                                   =",
-            "=                                                                   =",
-            "=M  ===========                                                     =",
-            "=                                                                   =",
-            "=                                                                   =",
-            "=                     ============================                  =",
-            "=                                                                   =",
-            "=                                                                   =",
-            "=                                           ======                  =",
-            "=                                                                   =",
-            "=                     ==================          m  ================",
-            "=                                                                   =",
-            "=                                                                   =",
-            "=                                                                   =",
-            "==============M                                                     =",
-            "=                                                                   =",
-            "=                                                                   =",
-            "=                                                                   =",
-            "=                                                                   =",
-            "=                            =============                          =",
-            "=                                                                   =",
-            "=                                                                   =",
-            "=                                            ====                   =",
-            "=                                                                   =",
-            "=                                                    =====          =",
-            "=                                                               *   =",
-            "=====================================================================",
-        ], {
-            width: TILE_WIDTH,
-            height: TILE_WIDTH,
-            "=": () => [sprite("scaffold", { height: TILE_WIDTH, width: TILE_WIDTH }), area(), solid(), "ground"],
-            ":": () => [sprite("scaffold", { height: TILE_WIDTH, width: TILE_WIDTH }), color(BLACK), area(), solid(), "ground", "crumbling"],
-            "R": () => ["ralphStart"],
-            "*": () => [sprite("flag", { height: TILE_WIDTH, width: TILE_WIDTH }), area(), "goal"],
-            // Elevator width is * 3 to avoid having three platforms for each one
-            "m": () => [sprite("movingPlatform", { height: TILE_WIDTH, width: TILE_WIDTH * 3 }), area(), solid(), "movingPlatform", "ground", { moveFactor: 1 }],
-            // Elevator width is * 3 to avoid having three platforms for each one
-            "M": () => [sprite("movingPlatform", { height: TILE_WIDTH, width: TILE_WIDTH * 3 }), area(), solid(), "movingPlatform", "ground", { moveFactor: 2 }],
-            "C": () => [sprite("coin", { height: TILE_WIDTH, width: TILE_WIDTH }), area(), "coin"],
-        });
-
         every("ralphStart", (ralphStart) => {
-            player = add([
-                sprite("ralph", { height: TILE_WIDTH, width: TILE_WIDTH }),
-                pos(ralphStart.pos),
-                area(),
-                body(),
-                rotate(0),
-                {
-                    vel: 0,
-                    acc: 10,
-                    maxVel: 500,
-                    maxSafeVel: 350,
-                    isActivatingPlatforms: false, // Controls whether moving platforms should be activated
-                    isAirborne: false,
-                    airborneCount: 0, // Used to determine how long the player has been in the air to decide if landing is safe
-                    maxSafeAirborneCount: 0.5, // In seconds
-                }
-            ]);
+            player = createPlayer(ralphStart.pos);
         });
 
         every("movingPlatform", (movingPlatform) => {
@@ -282,7 +137,7 @@ const startGame = () => {
                 (hasHitWall && Math.abs(player.vel) > player.maxSafeVel)
                 || (player.isAirborne && Math.abs(player.angle) > 45)
                 || (player.isAirborne && player.airborneCount >= player.maxSafeAirborneCount)) {
-                explode(player);
+                explode(player, currentLevel);
             }
 
             player.angle = 0;
@@ -302,7 +157,7 @@ const startGame = () => {
             play("boom", { speed: 8, detune: 8000 });
         });
 
-        player.onCollide("goal", () => go("victory", { coinsCollected, startTime, endTime: Date.now() }));
+        player.onCollide("goal", () => go("victory", { coinsCollected, startTime, endTime: Date.now(), nextLevel }));
 
         window.addEventListener("deviceorientation", (e) => {
             // TODO: Auto-detect which side of the device is to the left and use that to determine which rotation value to use
@@ -387,21 +242,225 @@ const startGame = () => {
                 }
             }
         });
+    }
+
+    let hasStartedGame = false;
+
+    scene("title", () => {
+        let hasGrantedPermission = false;
+
+        // Has to be touchend to prompt for permissions
+        window.addEventListener("touchend", () => {
+            if (!hasStartedGame) {
+                hasStartedGame = true;
+                play("aroo", { speed: 4, detune: 2000 });
+                handleClick();
+            }
+        });
+
+
+        const handleClick = async () => {
+            if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
+                const value = await DeviceMotionEvent.requestPermission();
+                if (value === "granted") {
+                    hasGrantedPermission = true;
+                } else {
+                    titleText.text = "Accelerometer is required to play. Please enable access.\n\n";
+                }
+            } else {
+                hasGrantedPermission = true;
+            }
+
+            if (hasGrantedPermission) {
+                go("one");
+                play("aroo", { speed: 4, detune: 2000 });
+            }
+        };
+
+        onClick(handleClick);
+
+        // const handleClick = async () => {
+        //     if (hasGrantedPermission) {
+        //         go("main");
+        //     } else {
+        //         if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
+        //             add([rect(10, 10), pos(10, 0), body(), area(), color(GREEN)]);
+        //             const response = await DeviceMotionEvent.requestPermission();
+        //             if (response === "granted") {
+        //                 hasGrantedPermission = true;
+        //                 permissionsButton.text = "Tap to play!";
+        //             }
+        //         } else {
+        //             go("main");
+        //         }
+        //     }
+        // };
+
+        const titleText = add([
+            text("RICKETY RALPH'S RICKETY RIDE\n\nTap to start!", { size: 36 }),
+            pos(24, 24),
+        ]);
+
+        onKeyDown(["enter", "space"], () => {
+            handleClick();
+        });
     });
 
-    scene("gameOver", () => {
-        add([text("Game Over!\n\nTap to try again", { size: 36 })]);
-        const playAgain = () => go("main");
+    const mapTileConfig = {
+        width: TILE_WIDTH,
+        height: TILE_WIDTH,
+        "=": () => [sprite("scaffold", { height: TILE_WIDTH, width: TILE_WIDTH }), area(), solid(), "ground"],
+        ":": () => [sprite("scaffold", { height: TILE_WIDTH, width: TILE_WIDTH }), color(GREEN), area(), solid(), "ground", "crumbling"],
+        "R": () => ["ralphStart"],
+        "*": () => [sprite("flag", { height: TILE_WIDTH, width: TILE_WIDTH }), area(), "goal"],
+        // Elevator width is * 3 to avoid having three platforms for each one
+        "m": () => [sprite("movingPlatform", { height: TILE_WIDTH, width: TILE_WIDTH * 3 }), area(), solid(), "movingPlatform", "ground", { moveFactor: 1 }],
+        // Elevator width is * 3 to avoid having three platforms for each one
+        "M": () => [sprite("movingPlatform", { height: TILE_WIDTH, width: TILE_WIDTH * 3 }), area(), solid(), "movingPlatform", "ground", { moveFactor: 2 }],
+        "C": () => [sprite("coin", { height: TILE_WIDTH, width: TILE_WIDTH }), area(), "coin"],
+    };
+
+    scene("one", () => {
+        const map = addLevel([
+            "=================================",
+            "=                               =",
+            "= R                             =",
+            "==========                      =",
+            "=                               =",
+            "=  C                          * =",
+            "=================================",
+        ], mapTileConfig);
+
+        sceneSetup({ currentLevel: "one", nextLevel: "two" });
+    });
+
+    scene("two", () => {
+        const map = addLevel([
+            "==============================================",
+            "= R                 =                        =",
+            "==========          =                        =",
+            "=                   =                        =",
+            "=                   =                        =",
+            "=       :::::::======                        =",
+            "=  C         C                            C  =",
+            "=======::::=========================::::======",
+            "=                                            =",
+            "=                                         *  =",
+            "==============================================",
+        ], mapTileConfig);
+
+        sceneSetup({ currentLevel: "two", nextLevel: "three" });
+    });
+
+    scene("three", () => {
+        const map = addLevel([
+            "================",
+            "= R    = C     =",
+            "====   =   =   =",
+            "=          =   =",
+            "========m  =   =",
+            "= *            =",
+            "================",
+        ], mapTileConfig);
+
+        sceneSetup({ currentLevel: "three", nextLevel: "four" });
+    });
+
+    scene("four", () => {
+
+        const map = addLevel([
+            "==================================================",
+            "= R           = C       =                        =",
+            "=========      ======   =  =====                 =",
+            "=                       =                        =",
+            "=            ========m  =m  ====                 =",
+            "= C          :                                 * =",
+            "=================================m  ==============",
+            "==================================================",
+        ], mapTileConfig);
+
+        sceneSetup({ currentLevel: "four", nextLevel: "five"});
+    });
+
+
+    scene("five", () => {
+        const map = addLevel([
+            "=============================",
+            "=                           =",
+            "=      R                    =",
+            "=   =============           =",
+            "=                ==         =",
+            "=                           =",
+            "=     C            ==       =",
+            "=M  =====                   =",
+            "=                    ==     =",
+            "=                           =",
+            "=                           =",
+            "=M  =====   =        ==:::::=",
+            "=         C =      ==       =",
+            "=           =               =",
+            "=           =    ==      C  =",
+            "=   =====M  =         =======",
+            "=              ==           =",
+            "=             =             =",
+            "=M  ===========             =",
+            "=                         * =",
+            "=============================",
+        ], mapTileConfig);
+
+        sceneSetup({ currentLevel: "five", nextLevel: "six" });
+
+    });
+
+
+    scene("six", () => {
+        const map = addLevel([
+            "=====================================================================",
+            "=                                                                   =",
+            "=                                                                   =",
+            "= R                                                                 =",
+            "===========================                                         =",
+            "=                                                                   =",
+            "=                                                                   =",
+            "=                                                                   =",
+            "=                                                                   =",
+            "=                                                                   =",
+            "=                                 ===============================m  =",
+            "=                                   =                               =",
+            "=                                   =                          C    =",
+            "=                    ==========     =                == == == ===   =",
+            "=                                   =       C                       =",
+            "=                                   =============                   =",
+            "=                                   =                               =",
+            "=                                   =============================M  =",
+            "==============                      =                               =",
+            "=                                   =                               =",
+            "=                                   =   =============================",
+            "=                ======             =                               =",
+            "=                                   =                             * =",
+            "=====================================================================",
+        ], mapTileConfig);
+
+        sceneSetup({ currentLevel: "six", nextLevel: "seven"});
+    })
+
+    scene("seven", () => {
+        add([text("Coming soon", { size: 24}, pos(24, 24))]);
+    });
+
+    scene("gameOver", ({ lastLevel }) => {
+        add([text("Game Over!\n\nTap to try again", { size: 36 }), pos(24, 24)]);
+        const playAgain = () => go(lastLevel);
         onTouchEnd(playAgain);
         onKeyPress("enter", () => playAgain());
         onClick(playAgain);
     });
 
-    scene("victory", ({ coinsCollected, startTime, endTime }) => {
+    scene("victory", ({ coinsCollected, startTime, endTime, nextLevel }) => {
         play("aroo", { speed: 4, detune: 2000 });
         // TODO: Score based on coins and time to complete
-        add([text(`You win! You collected ${coinsCollected} coins!\n\nYou completed the level in ${(endTime - starTime) / 1000} seconds!\n\nTap to try again`, { size: 36 })]);
-        const playAgain = () => go("main");
+        add([text(`You win! You collected ${coinsCollected} coins!\n\nYou completed the level in\n\n${(endTime - startTime) / 1000} seconds!\n\nTap the screen to play the next level`, { size: 36 }), pos(24, 24)]);
+        const playAgain = () => go(nextLevel);
         onTouchEnd(playAgain);
         onKeyPress("enter", () => playAgain());
         onClick(playAgain);

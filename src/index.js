@@ -12,6 +12,8 @@ const startGame = () => {
     });
 
     let player;
+    // Currently re-used between scenes
+    let orientationListener;
 
     const createPlayer = (startPos) => add([
         sprite("ralph", { height: TILE_WIDTH, width: TILE_WIDTH }),
@@ -171,9 +173,14 @@ const startGame = () => {
 
         player.onCollide("goal", () => go("victory", { coinsCollected, startTime, endTime: Date.now(), nextLevel }));
 
-        window.addEventListener("deviceorientation", (e) => {
+        if (orientationListener) {
+            window.removeEventListener("deviceorientation", orientationListener);
+        }
+
+        orientationListener = window.addEventListener("deviceorientation", (e) => {
             // TODO: Auto-detect which side of the device is to the left and use that to determine which rotation value to use
             // TODO: Consolidate this and the keyboard movement into one function
+            // TODO: Just dispatch a keydown event?
             if (Math.abs(player.vel) < player.maxVel) {
                 // The raw input makes the movement very sensitive
                 player.vel += (e.beta / 5);

@@ -4,7 +4,6 @@ const TILE_WIDTH = 30;
 
 // Currently re-used between scenes
 let isOrientationListenerSet;
-let listenerCount = 0;
 
 const startGame = () => {
 
@@ -93,7 +92,7 @@ const startGame = () => {
         const startTime = Date.now();
 
         const orientationHandler = (e) => {
-            console.log("Orientation listener! How many? " + listenerCount);
+            console.log("Orientation listener!");
             // TODO: Auto-detect which side of the device is to the left and use that to determine which rotation value to use
             // TODO: Consolidate this and the keyboard movement into one function
             // TODO: Just dispatch a keydown event?
@@ -192,15 +191,12 @@ const startGame = () => {
         player.onCollide("goal", () => go("victory", { coinsCollected, startTime, endTime: Date.now(), nextLevel }));
 
         console.log("Does orientation listener exist? ", isOrientationListenerSet);
-        if (isOrientationListenerSet) {
-            console.log("Removing orientation listener");
-            listenerCount--;
-            window.removeEventListener("deviceorientation", orientationHandler, true);
-        }
 
-        listenerCount++;
-        isOrientationListenerSet = true;
-        window.addEventListener("deviceorientation", orientationHandler, true);
+        if (!isOrientationListenerSet) {
+            console.log("Setting orientation listener");
+            window.addEventListener("deviceorientation", orientationHandler, true);
+            isOrientationListenerSet = true;
+        }
 
         const activatePlatforms = () => {
             if (!player.isActivatingPlatforms) {

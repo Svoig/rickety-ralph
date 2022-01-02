@@ -2,6 +2,10 @@ import kaboom from "kaboom";
 
 const TILE_WIDTH = 30;
 
+// Currently re-used between scenes
+let isOrientationListenerSet;
+let listenerCount = 0;
+
 const startGame = () => {
 
     document.querySelector("#pre-game").style = "visibility: hidden; display: none;";
@@ -12,8 +16,6 @@ const startGame = () => {
     });
 
     let player;
-    // Currently re-used between scenes
-    let orientationListener;
 
     const createPlayer = (startPos) => add([
         sprite("ralph", { height: TILE_WIDTH, width: TILE_WIDTH }),
@@ -89,6 +91,22 @@ const startGame = () => {
 
     function sceneSetup({ currentLevel, nextLevel }) {
         const startTime = Date.now();
+
+        const orientationHandler = (e) => {
+            console.log("Orientation listener! How many? " + listenerCount);
+            // TODO: Auto-detect which side of the device is to the left and use that to determine which rotation value to use
+            // TODO: Consolidate this and the keyboard movement into one function
+            // TODO: Just dispatch a keydown event?
+            if (Math.abs(player.vel) < player.maxVel) {
+                // The raw input makes the movement very sensitive
+                player.vel += (e.beta / 5);
+            }
+
+            // Rotate player in air
+            if (!player.isGrounded()) {
+                player.angle += (e.beta / 10);
+            }
+        }
 
         every("ralphStart", (ralphStart) => {
             player = createPlayer(ralphStart.pos);
@@ -173,24 +191,16 @@ const startGame = () => {
 
         player.onCollide("goal", () => go("victory", { coinsCollected, startTime, endTime: Date.now(), nextLevel }));
 
-        if (orientationListener) {
-            window.removeEventListener("deviceorientation", orientationListener, true);
+        console.log("Does orientation listener exist? ", isOrientationListenerSet);
+        if (isOrientationListenerSet) {
+            console.log("Removing orientation listener");
+            listenerCount--;
+            window.removeEventListener("deviceorientation", orientationHandler, true);
         }
 
-        orientationListener = window.addEventListener("deviceorientation", (e) => {
-            // TODO: Auto-detect which side of the device is to the left and use that to determine which rotation value to use
-            // TODO: Consolidate this and the keyboard movement into one function
-            // TODO: Just dispatch a keydown event?
-            if (Math.abs(player.vel) < player.maxVel) {
-                // The raw input makes the movement very sensitive
-                player.vel += (e.beta / 5);
-            }
-
-            // Rotate player in air
-            if (!player.isGrounded()) {
-                player.angle += (e.beta / 10);
-            }
-        }, true);
+        listenerCount++;
+        isOrientationListenerSet = true;
+        window.addEventListener("deviceorientation", orientationHandler, true);
 
         const activatePlatforms = () => {
             if (!player.isActivatingPlatforms) {

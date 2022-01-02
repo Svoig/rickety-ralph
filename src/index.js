@@ -174,7 +174,7 @@ const startGame = () => {
         player.onCollide("goal", () => go("victory", { coinsCollected, startTime, endTime: Date.now(), nextLevel }));
 
         if (orientationListener) {
-            window.removeEventListener("deviceorientation", orientationListener);
+            window.removeEventListener("deviceorientation", orientationListener, true);
         }
 
         orientationListener = window.addEventListener("deviceorientation", (e) => {
@@ -190,7 +190,7 @@ const startGame = () => {
             if (!player.isGrounded()) {
                 player.angle += (e.beta / 10);
             }
-        });
+        }, true);
 
         const activatePlatforms = () => {
             if (!player.isActivatingPlatforms) {
